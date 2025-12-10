@@ -1,4 +1,4 @@
-# ai docs assistant
+# AI docs assistant
 
 ai docs assistant is a self-hostable tool that helps you capture any documentation page, turn it into clean markdown, and process it inside a simple dashboard. the goal is to make reading and understanding docs easier by giving you a single place where you can store, summarize, and generate things from them.
 
