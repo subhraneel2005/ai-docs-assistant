@@ -17,20 +17,24 @@ model User {
 model Doc {
   id        String    @id @default(uuid())
   userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  markdown  String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  markdown  String    @db.Text
   title     String
   pageUrl   String
   summaries Summary[]
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 model Summary {
   id        String   @id @default(uuid())
   docId     String
-  doc       Doc      @relation(fields: [docId], references: [id])
-  summary   String
+  doc       Doc      @relation(fields: [docId], references: [id], onDelete: Cascade)
+  summary   String   @db.Text
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([docId])
 }
