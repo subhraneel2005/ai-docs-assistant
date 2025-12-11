@@ -3,15 +3,41 @@ import { useState } from "react"
 import "~style.css"
 
 function IndexPopup() {
-  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle")
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle")
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
     setStatus("loading")
 
-    // Simulate the capture process
-    setTimeout(() => {
-      setStatus("success")
-    }, 1500)
+    try {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
+      })
+
+      if (!tab.id) {
+        console.error("No active tab found")
+        setStatus("error")
+        return
+      }
+
+      console.log("Sending message to tab:", tab.id)
+
+      chrome.tabs.sendMessage(tab.id, { type: "SCRAPE_PAGE" }, (res) => {
+        if (chrome.runtime.lastError) {
+          console.error("Error:", chrome.runtime.lastError.message)
+          setStatus("error")
+          return
+        }
+
+        console.log("Scraper returned:", res)
+        setStatus("success")
+      })
+    } catch (error) {
+      console.error("Capture error:", error)
+      setStatus("error")
+    }
   }
 
   return (
