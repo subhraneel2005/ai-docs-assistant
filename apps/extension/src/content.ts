@@ -1,5 +1,8 @@
 import type { PlasmoCSConfig } from "plasmo"
 
+import { sendToBackground } from "@plasmohq/messaging"
+
+import { getMetadata } from "~utils/getMetadata"
 import { convertHtmlToMarkdown } from "~utils/parseToMarkdown"
 
 export const config: PlasmoCSConfig = {
@@ -13,25 +16,20 @@ const scrollAndWaitForContent = async (): Promise<void> => {
     let unchangedCount = 0
 
     const checkScroll = setInterval(() => {
-      // Scroll to bottom
       window.scrollTo(0, document.body.scrollHeight)
-
-      // Check if height changed
       const newHeight = document.body.scrollHeight
 
       if (newHeight === lastHeight) {
         unchangedCount++
-        // If height hasn't changed for 3 checks, we're done
         if (unchangedCount >= 3) {
           clearInterval(checkScroll)
-          setTimeout(resolve, 500) // Final wait for images/content
+          setTimeout(resolve, 500)
         }
       } else {
         unchangedCount = 0
         lastHeight = newHeight
       }
 
-      // Safety timeout after 30 seconds
       if (unchangedCount > 100) {
         clearInterval(checkScroll)
         resolve()
@@ -47,7 +45,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const scrape = async () => {
       try {
         console.log("🔄 Starting to scroll and load all content...")
-
         const originalScrollPos = window.scrollY
 
         await scrollAndWaitForContent()
@@ -58,22 +55,29 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const bodyText = document.body.innerText || document.body.textContent
         const parsedMarkdown = convertHtmlToMarkdown(bodyText)
 
-        // Restore scroll position
         window.scrollTo(0, originalScrollPos)
 
-        const response = {
-          success: true,
+        const metadata = getMetadata()
+
+        const payload = {
           rawContent: bodyText,
           html: html,
-          parsedMarkdown: parsedMarkdown
+          parsedMarkdown: parsedMarkdown,
+          metadata: metadata
         }
 
-        console.log("✅ Content collected:", {
-          contentLength: response.rawContent?.length,
-          htmlLength: response.html?.length
+        // Send to background using Plasmo messaging
+        const uploadResponse = await sendToBackground({
+          name: "uploadDoc",
+          body: payload
         })
 
-        sendResponse(response)
+        console.log("✅ Upload response:", uploadResponse)
+
+        sendResponse({
+          success: true,
+          uploadResult: uploadResponse
+        })
       } catch (error) {
         console.error("❌ Scraping error:", error)
         sendResponse({

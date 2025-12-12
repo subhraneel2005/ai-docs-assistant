@@ -16,15 +16,18 @@ model User {
 }
 
 model Doc {
-  id        String    @id @default(uuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  markdown  String    @db.Text
-  title     String
-  pageUrl   String
-  summaries Summary[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  markdown    String    @db.Text
+  title       String
+  description String
+  image       String?
+  canonical   String?
+  pageUrl     String
+  summaries   Summary[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([userId])
 }
