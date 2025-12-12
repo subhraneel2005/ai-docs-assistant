@@ -15,6 +15,8 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import { ThemeProvider } from "next-themes";
+import Navbar from "@/components/Navbar";
 
 export default function RootLayout({
   children,
@@ -25,23 +27,18 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${GeistMono.className} antialiased`}>
-          <main className="px-12">
-            {" "}
-            <header className="flex justify-end items-center p-4 gap-4 h-16">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant={"outline"}>Signin</Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button variant={"default"}>Signup</Button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-            </header>
-            {children}
-          </main>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <main className="px-12">
+              {" "}
+              <Navbar />
+              {children}
+            </main>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

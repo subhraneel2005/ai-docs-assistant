@@ -13,13 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Doc } from "./types";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, ExternalLink } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from "next/link";
 
 export default function Home() {
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -73,7 +74,18 @@ export default function Home() {
               className="cursor-pointer transition-all duration-300 hover:shadow-md"
             >
               <CardHeader>
-                <CardTitle>{doc.title}</CardTitle>
+                <div className="flex gap-2 items-center">
+                  <CardTitle>{doc.title}</CardTitle>
+                  <Link
+                    href={doc.pageUrl}
+                    target="_blank"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <ExternalLink size={20} className="text-blue-500 " />
+                  </Link>
+                </div>
                 <CardDescription>{doc.description}</CardDescription>
               </CardHeader>
 
@@ -98,7 +110,6 @@ export default function Home() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            variant="secondary"
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log("Summarise doc:", doc.id);
@@ -121,7 +132,6 @@ export default function Home() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            variant="secondary"
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log("Generate starter code for:", doc.id);
