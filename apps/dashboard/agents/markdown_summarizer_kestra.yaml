@@ -1,0 +1,142 @@
+id: markdown_summarizer
+namespace: tutorial
+
+description: |
+  AI Agent that summarizes markdown content with adjustable length and tone.
+
+inputs:
+  - id: markdown_content
+    type: STRING
+    required: true
+
+  - id: tone
+    type: STRING
+    defaults: professional
+
+  - id: summary_style
+    type: STRING
+    defaults: auto
+
+  - id: preserve_code
+    type: BOOLEAN
+    defaults: false
+
+tasks:
+  # Step 1: Analyze markdown
+  - id: analyze_content
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    outputFiles:
+      - word_count.txt
+      - line_count.txt
+      - has_code.txt
+      - has_headers.txt
+      - complexity.txt
+      - length_instruction.txt
+    script: |
+      import re
+
+      markdown = """{{ inputs.markdown_content }}"""
+
+      word_count = len(markdown.split())
+      line_count = len(markdown.splitlines())
+
+      has_code = bool(re.search(r'```', markdown))
+      has_headers = bool(re.search(r'^#{1,6}\s', markdown, re.MULTILINE))
+
+      if word_count < 200:
+          complexity = "simple"
+          length_instruction = "Provide a concise 2-3 sentence summary"
+      elif word_count < 800:
+          complexity = "moderate"
+          length_instruction = "Provide a single paragraph summary (4-6 sentences)"
+      else:
+          complexity = "complex"
+          length_instruction = "Provide a detailed multi-paragraph summary"
+
+      def write(name, value):
+          with open(name, "w") as f:
+              f.write(str(value))
+
+      write("word_count.txt", word_count)
+      write("line_count.txt", line_count)
+      write("has_code.txt", has_code)
+      write("has_headers.txt", has_headers)
+      write("complexity.txt", complexity)
+      write("length_instruction.txt", length_instruction)
+
+  # Step 2: Summarization
+  - id: summarize_markdown
+    type: io.kestra.plugin.ai.agent.AIAgent
+
+    prompt: |
+      Summarize the following markdown content:
+
+      ---
+      {{ inputs.markdown_content }}
+      ---
+
+    systemMessage: |
+      You are an expert markdown summarizer.
+
+      TONE: {{ inputs.tone }}
+
+      {% if inputs.summary_style == 'auto' %}
+      {{ outputs.analyze_content.outputFiles["length_instruction.txt"] }}
+      {% elseif inputs.summary_style == 'brief' %}
+      Provide a concise 2-3 sentence summary.
+      {% elseif inputs.summary_style == 'standard' %}
+      Provide a single paragraph summary (4-6 sentences).
+      {% elseif inputs.summary_style == 'detailed' %}
+      Provide a detailed multi-paragraph summary.
+      {% elseif inputs.summary_style == 'bullet_points' %}
+      Provide a bullet-point summary with 5-7 key points.
+      {% endif %}
+
+      CONTENT CONTEXT:
+      - Word count: {{ outputs.analyze_content.outputFiles["word_count.txt"] }}
+      - Complexity: {{ outputs.analyze_content.outputFiles["complexity.txt"] }}
+
+      {% if inputs.preserve_code and outputs.analyze_content.outputFiles["has_code.txt"] == 'True' %}
+      IMPORTANT: Preserve relevant code blocks.
+      {% endif %}
+
+      Rules:
+      - Be accurate
+      - No meta commentary
+      - Output ONLY the summary
+
+    provider:
+      type: io.kestra.plugin.ai.provider.GoogleGemini
+      modelName: gemini-2.5-flash
+      apiKey: "{{ kv('GEMINI_API_KEY') }}"
+
+  # Step 3: Return structured output
+  - id: format_output
+    type: io.kestra.plugin.core.debug.Return
+    format: |
+      {
+        "summary": {{ outputs.summarize_markdown.textOutput | json }},
+        "metadata": {
+          "word_count": {{ outputs.analyze_content.outputFiles["word_count.txt"] }},
+          "complexity": "{{ outputs.analyze_content.outputFiles["complexity.txt"] }}",
+          "tone": "{{ inputs.tone }}",
+          "style": "{{ inputs.summary_style }}",
+          "has_code": {{ outputs.analyze_content.outputFiles["has_code.txt"] }},
+          "timestamp": "{{ now() }}"
+        }
+      }
+
+outputs:
+  - id: summary
+    type: STRING
+    value: "{{ outputs.summarize_markdown.outputs.text }}"
+
+  - id: word_count
+    type: INT
+    value: "{{ outputs.analyze_content.outputFiles['word_count.txt'] }}"
+
+  - id: complexity
+    type: STRING
+    value: "{{ outputs.analyze_content.outputFiles['complexity.txt'] }}"

@@ -7,6 +7,7 @@ import {
   CardTitle,
   CardContent,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import Markdown from "react-markdown";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +22,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchDocs = async () => {
@@ -46,64 +49,50 @@ export default function Home() {
     fetchDocs();
   }, []);
 
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const truncate = (markdown: string, len = 200) => {
-    if (markdown.length <= len) return markdown;
-    return markdown.slice(0, len) + " ...";
-  };
-
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">AI Docs Assistant Dashboard</h1>
+      <h1 className="text-4xl tracking-[-1.5px] font-bold">
+        AI Docs Assistant Dashboard
+      </h1>
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="grid gap-4">
         {docs.map((doc) => {
-          const isOpen = expandedId === doc.id;
-          const content = isOpen ? doc.markdown : truncate(doc.markdown);
-
           return (
-            <Card
-              key={doc.id}
-              onClick={() => toggleExpand(doc.id)}
-              className="cursor-pointer transition-all duration-300 hover:shadow-md"
-            >
-              <CardHeader>
-                <div className="flex gap-2 items-center">
-                  <CardTitle>{doc.title}</CardTitle>
-                  <Link
-                    href={doc.pageUrl}
-                    target="_blank"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    <ExternalLink size={20} className="text-blue-500 " />
-                  </Link>
-                </div>
-                <CardDescription>{doc.description}</CardDescription>
-              </CardHeader>
+            <>
+              <h2 className="text-2xl tracking-[-1.2px] font-bold mt-12">
+                My Docs
+              </h2>
 
-              <CardContent className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Created: {new Date(doc.createdAt).toLocaleString()}
-                </p>
+              <Card
+                key={doc.id}
+                className="cursor-pointer transition-all duration-300 hover:shadow-md w-full max-w-2xl"
+                onClick={() => router.push(`/docs/${doc.id}`)}
+              >
+                <CardHeader>
+                  <div className="flex gap-2 items-center">
+                    <CardTitle>{doc.title}</CardTitle>
+                    <Link
+                      href={doc.pageUrl}
+                      target="_blank"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      <ExternalLink size={20} className="text-blue-500 " />
+                    </Link>
+                  </div>
+                  <CardDescription>{doc.description}</CardDescription>
+                </CardHeader>
 
-                {/* Animated height for smooth open/close */}
-                <div
-                  className={`overflow-hidden transition-all duration-300 ${
-                    isOpen ? "max-h-[9999px]" : "max-h-[120px]"
-                  }`}
-                >
-                  <Markdown>{content}</Markdown>
-                </div>
-
-                {!isOpen && (
+                <CardContent className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Created: {new Date(doc.createdAt).toLocaleString()}
+                  </p>
+                </CardContent>
+                <CardFooter>
                   <div className="flex items-center gap-3 mt-4">
                     {/* Summarise Doc */}
                     <TooltipProvider>
@@ -112,7 +101,7 @@ export default function Home() {
                           <Button
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("Summarise doc:", doc.id);
+                              router.push(`/docs/${doc.id}`);
                             }}
                           >
                             Summarise this Doc
@@ -148,32 +137,10 @@ export default function Home() {
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    <ButtonGroup className="cursor-pointer">
-                      <Button variant={"outline"}>Click to expand</Button>
-                      <Button variant={"outline"}>
-                        <ArrowDown />
-                      </Button>
-                    </ButtonGroup>
                   </div>
-                )}
-                {isOpen && (
-                  <ButtonGroup className="cursor-pointer">
-                    <Button variant={"outline"}>Click to collapse</Button>
-                    <Button variant={"outline"}>
-                      <ArrowUp />
-                    </Button>
-                  </ButtonGroup>
-                )}
-
-                <div className="flex flex-wrap gap-2">
-                  {doc.summaries?.map((sum) => (
-                    <Badge key={sum.id} variant="secondary">
-                      {sum.type || "summary"}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                </CardFooter>
+              </Card>
+            </>
           );
         })}
       </div>

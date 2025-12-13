@@ -22,6 +22,14 @@ export async function GET(request: Request) {
       orderBy: {
         createdAt: "desc",
       },
+      select: {
+        id: true,
+        userId: true,
+        pageUrl: true,
+        title: true,
+        description: true,
+        createdAt: true,
+      },
     });
 
     return new Response(JSON.stringify(allUserDocs), { status: 200 });

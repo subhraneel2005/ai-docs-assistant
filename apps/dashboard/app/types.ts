@@ -37,4 +37,47 @@ interface Doc {
   updatedAt: string; // ISO date string
 }
 
-export type { NewDocPayload, Doc, Summary };
+// KESTRA TYPES
+interface KestraSummarizerInputPayload {
+  markdown: string;
+  tone: SummaryTones;
+  summary_style: SummaryStyles;
+  preserve_code: boolean;
+}
+
+export enum SummaryTones {
+  professional = "professional",
+  friendly = "friendly",
+  neutral = "neutral",
+  technical = "technical",
+  casual = "casual",
+  concise = "concise",
+}
+
+export enum SummaryStyles {
+  auto = "auto",
+  brief = "brief",
+  standard = "standard",
+  detailed = "detailed",
+  bullet_points = "bullet_points",
+}
+
+interface KestraSummarizerOutputResponse {
+  summary: string;
+  metadata: KestraResponseMetadata;
+}
+
+interface KestraResponseMetadata {
+  word_count: number;
+  complexity: string;
+  tone: string;
+  style: SummaryStyles;
+}
+
+export type {
+  NewDocPayload,
+  Doc,
+  Summary,
+  KestraSummarizerInputPayload,
+  KestraSummarizerOutputResponse,
+};
