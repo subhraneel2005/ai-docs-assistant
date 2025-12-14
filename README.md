@@ -1,68 +1,109 @@
-# AI docs assistant
+# ai docs assistant
 
-ai docs assistant is a self-hostable tool that helps you capture any documentation page, turn it into clean markdown, and process it inside a simple dashboard. the goal is to make reading and understanding docs easier by giving you a single place where you can store, summarize, and generate things from them.
+ai docs assistant is a self-hostable tool that helps you capture any documentation page, turn it into clean markdown, and work with it inside a simple dashboard. the goal is to make reading and understanding docs easier by keeping everything in one place.
 
-the project includes a browser extension for grabbing content from the web and a dashboard for viewing and running ai actions on the saved markdown. everything stays under your control and can run locally or on your own server.
+the project includes a chrome extension for grabbing content from the web and a next.js dashboard for viewing and running ai actions on the saved markdown. everything stays under your control and can run locally or on your own setup.
 
 ---
 
 ## what this project does
 
-- captures documentation pages using a chrome extension
-- converts the page into clean markdown
-- saves the markdown to your dashboard
-- lets you run summaries, explanations, and breakdowns on any saved doc
-- improves summary quality over time using reinforcement feedback
-- can generate starter code or project scaffolding using the cline cli
-- works fully self-hosted
-- dashboard can be deployed on vercel
+* captures documentation pages using a chrome extension
+* converts the page into clean, readable markdown
+* saves the markdown to your dashboard
+* lets you generate summaries based on tone, style, and length
+* processes docs using a kestra ai agent
+* keeps everything self-hostable
+* dashboard is deployed on vercel
 
 ---
 
 ## main features
 
-- browser extension to extract content directly from any url
-- markdown cleaner for consistent formatting
-- dashboard to view, organize, and process saved docs
-- kestra ai workflows for different types of summaries
-- oumi reinforcement loop to refine results based on your feedback
-- cline integration to turn documentation into working starter code
-- simple and minimal ui
-- monorepo structure using turborepo
+* chrome extension to extract content from any documentation url
+* markdown cleaner for consistent formatting
+* dashboard to view, organize, and summarize saved docs
+* kestra ai workflow for markdown summarization
+* support for tone, summary style, and markdown length
+* simple and minimal ui
+* monorepo setup using turborepo
 
 ---
 
 ## tools and tech used
 
 **next.js**
-dashboard and backend api routes.
+powers the dashboard and api routes.
 
 **chrome extension (plasmo)**
-used for capturing content and sending it to the backend.
+used to capture webpage content and send it to the backend.
 
 **kestra ai agent**
-handles summarization and doc processing workflows.
-
-**oumi**
-used for reinforcement learning based on user feedback.
-
-**cline cli**
-generates starter code or scaffolding from the captured markdown.
+handles markdown analysis and summarization workflows. currently runs locally.
 
 **vercel**
-deployment target for the dashboard.
-
-**docker (planned)**
-for self-hostable packaging.
+used to deploy the next.js dashboard.
 
 **turborepo**
-manages the dashboard, extension, and shared packages in one codebase.
+manages the dashboard, extension, and shared code in a single repo.
 
 ---
 
-## structure
+## kestra setup (local)
 
-- extension: captures and sends markdown
-- dashboard: ui and api
-- shared: utils and types
-- cline automation: scripts to trigger code generation
+kestra is currently expected to run locally.
+
+run:
+
+```
+docker run --pull=always --rm -it \
+  -p 8080:8080 \
+  --user=root \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  kestra/kestra:latest server local
+```
+
+then:
+
+* open [http://localhost:8080](http://localhost:8080)
+* create an account
+* go to **key value pairs** and add `GEMINI_API_KEY`
+* create a flow under the `tutorial` namespace
+* paste the contents of `apps/dashboard/agents/markdown_summarizer_kestra.yaml`
+* save the flow
+
+once saved, the dashboard can trigger this workflow for summarization.
+
+---
+
+## chrome extension (local)
+
+```
+cd apps/extension
+pnpm dev
+```
+
+then load the extension manually:
+
+* open chrome extensions
+* enable developer mode
+* load unpacked
+* select `apps/extension/build/chrome-mv3-dev`
+
+---
+
+## deployed dashboard
+
+[https://ai-docs-assistant-dashboard.vercel.app/](https://ai-docs-assistant-dashboard.vercel.app/)
+
+---
+
+## repo structure
+
+* `apps/extension` – chrome extension for capturing docs
+* `apps/dashboard` – next.js dashboard and api
+* `packages/shared` – shared utils and types
+
+---
+
+this project focuses on making documentation easier to work with, without locking users into a hosted service. it’s built to be simple, extendable, and fully under your control.
