@@ -87,7 +87,7 @@ export async function POST(request: Request) {
         complexity: outputValue.metadata?.complexity || "unknown",
         tone: outputValue.metadata?.tone || "professional",
         style: outputValue.metadata?.style || "auto",
-        has_code: outputValue.metadata?.has_code || false,
+        // has_code: outputValue.metadata?.has_code || false,
       },
     };
 

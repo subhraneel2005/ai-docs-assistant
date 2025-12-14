@@ -119,11 +119,11 @@ tasks:
       {
         "summary": {{ outputs.summarize_markdown.textOutput | json }},
         "metadata": {
-          "word_count": {{ outputs.analyze_content.outputFiles["word_count.txt"] }},
-          "complexity": "{{ outputs.analyze_content.outputFiles["complexity.txt"] }}",
+          "word_count": {{ read(outputs.analyze_content.outputFiles["word_count.txt"]) | trim }},
+          "complexity": "{{ read(outputs.analyze_content.outputFiles["complexity.txt"]) | trim }}",
           "tone": "{{ inputs.tone }}",
           "style": "{{ inputs.summary_style }}",
-          "has_code": {{ outputs.analyze_content.outputFiles["has_code.txt"] }},
+         "has_code": {{ read(outputs.analyze_content.outputFiles["has_code.txt"]) | trim | lower }},
           "timestamp": "{{ now() }}"
         }
       }
@@ -131,12 +131,16 @@ tasks:
 outputs:
   - id: summary
     type: STRING
-    value: "{{ outputs.summarize_markdown.outputs.text }}"
+    value: "{{ outputs.summarize_markdown.textOutput }}"
 
   - id: word_count
     type: INT
-    value: "{{ outputs.analyze_content.outputFiles['word_count.txt'] }}"
+    value: "{{ read(outputs.analyze_content.outputFiles['word_count.txt']) | trim }}"
 
   - id: complexity
     type: STRING
-    value: "{{ outputs.analyze_content.outputFiles['complexity.txt'] }}"
+    value: "{{ read(outputs.analyze_content.outputFiles['complexity.txt']) | trim }}"
+
+  - id: has_code
+    type: BOOLEAN
+    value: "{{ read(outputs.analyze_content.outputFiles['has_code.txt']) | trim }}"
